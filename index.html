@@ -33,6 +33,7 @@
         li {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             margin-bottom: 10px;
         }
 
@@ -43,6 +44,7 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            margin-left: 5px;
         }
 
         button:disabled {
@@ -62,7 +64,7 @@
         <button id="reset">Reset Progress</button>
     </div>
     <script>
-        const exercises = [
+        const initialExercises = [
             { name: 'Chin Tucks', reps: 10 },
             { name: 'Neck Rotations', reps: 10 },
             { name: 'Side Bends', reps: 10 },
@@ -73,6 +75,7 @@
         ];
 
         const storageKey = 'whiplashRecoveryProgress';
+        const historyKey = 'whiplashRecoveryHistory';
         const dateContainer = document.getElementById('date-container');
         const exerciseList = document.getElementById('exercise-list');
         const resetButton = document.getElementById('reset');
@@ -80,9 +83,17 @@
         const today = new Date().toISOString().split('T')[0];
 
         let progress = JSON.parse(localStorage.getItem(storageKey)) || { date: '', exercises: [] };
+        let history = JSON.parse(localStorage.getItem(historyKey)) || [];
 
         if (progress.date !== today) {
-            progress = { date: today, exercises: exercises.map(ex => ({ ...ex, completed: false, easily: false })) };
+            if (progress.date) {
+                history.push({ date: progress.date, exercises: progress.exercises });
+                localStorage.setItem(historyKey, JSON.stringify(history));
+            }
+            progress = {
+                date: today,
+                exercises: progress.exercises.length ? progress.exercises.map(ex => ({ ...ex, completed: false, easily: false })) : initialExercises
+            };
             localStorage.setItem(storageKey, JSON.stringify(progress));
         }
 
@@ -120,6 +131,7 @@
         function markCompleted(index, easily) {
             progress.exercises[index].completed = true;
             progress.exercises[index].easily = easily;
+            progress.exercises[index].completionTime = new Date().toISOString();
             if (easily) {
                 progress.exercises[index].reps += 2;
             } else {
@@ -131,6 +143,7 @@
 
         resetButton.onclick = () => {
             localStorage.removeItem(storageKey);
+            localStorage.removeItem(historyKey);
             location.reload();
         };
 
