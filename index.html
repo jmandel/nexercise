@@ -32,9 +32,24 @@
 
         li {
             display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+        .exercise-header {
+            display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+        }
+
+        .exercise-header span {
+            font-weight: bold;
+        }
+
+        .instructions {
+            font-size: 0.9em;
+            color: #555;
+            margin: 5px 0 10px 0;
         }
 
         button {
@@ -54,6 +69,14 @@
         .completed {
             text-decoration: line-through;
         }
+
+        #stats {
+            margin-top: 20px;
+        }
+
+        .stat {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -62,16 +85,20 @@
         <div id="date-container"></div>
         <ul id="exercise-list"></ul>
         <button id="reset">Reset Progress</button>
+        <div id="stats">
+            <h2>History</h2>
+            <div id="history-container"></div>
+        </div>
     </div>
     <script>
         const initialExercises = [
-            { name: 'Chin Tucks', reps: 10 },
-            { name: 'Neck Rotations', reps: 10 },
-            { name: 'Side Bends', reps: 10 },
-            { name: 'Forward Resistance', reps: 10 },
-            { name: 'Side Resistance', reps: 10 },
-            { name: 'Shoulder Shrugs', reps: 10 },
-            { name: 'Shoulder Blade Squeezes', reps: 10 }
+            { name: 'Chin Tucks', reps: 10, instructions: 'Sit or stand up straight. Tuck your chin in towards your chest without bending your neck. Hold for 5 seconds and release.' },
+            { name: 'Neck Rotations', reps: 10, instructions: 'Slowly turn your head to the left as far as comfortable, hold for 5 seconds, then return to the center. Repeat on the right side.' },
+            { name: 'Side Bends', reps: 10, instructions: 'Tilt your head towards your shoulder, hold for 5 seconds, then return to the center. Repeat on the other side.' },
+            { name: 'Forward Resistance', reps: 10, instructions: 'Place your hand on your forehead and push your head against it without moving your neck. Hold for 5 seconds.' },
+            { name: 'Side Resistance', reps: 10, instructions: 'Place your hand on the side of your head and push against it without moving your neck. Hold for 5 seconds. Repeat on the other side.' },
+            { name: 'Shoulder Shrugs', reps: 10, instructions: 'Lift your shoulders towards your ears and hold for 5 seconds, then relax.' },
+            { name: 'Shoulder Blade Squeezes', reps: 10, instructions: 'Squeeze your shoulder blades together and hold for 5 seconds, then release.' }
         ];
 
         const storageKey = 'whiplashRecoveryProgress';
@@ -79,8 +106,15 @@
         const dateContainer = document.getElementById('date-container');
         const exerciseList = document.getElementById('exercise-list');
         const resetButton = document.getElementById('reset');
+        const historyContainer = document.getElementById('history-container');
 
-        const today = new Date().toISOString().split('T')[0];
+        function getLocalDate() {
+            const now = new Date();
+            now.setHours(0, 0, 0, 0); // Reset to midnight to avoid issues with time zones
+            return now.toISOString().split('T')[0];
+        }
+
+        const today = getLocalDate();
 
         let progress = JSON.parse(localStorage.getItem(storageKey)) || { date: '', exercises: [] };
         let history = JSON.parse(localStorage.getItem(historyKey)) || [];
@@ -92,7 +126,12 @@
             }
             progress = {
                 date: today,
-                exercises: progress.exercises.length ? progress.exercises.map(ex => ({ ...ex, completed: false, easily: false })) : initialExercises
+                exercises: progress.exercises.length ? progress.exercises.map(ex => ({
+                    ...ex,
+                    completed: false,
+                    easily: false,
+                    reps: ex.reps + (ex.easily ? 2 : 0)
+                })) : initialExercises
             };
             localStorage.setItem(storageKey, JSON.stringify(progress));
         }
@@ -103,9 +142,12 @@
             exerciseList.innerHTML = '';
             progress.exercises.forEach((exercise, index) => {
                 const li = document.createElement('li');
+                const header = document.createElement('div');
+                header.className = 'exercise-header';
+                
                 const text = document.createElement('span');
                 text.textContent = `${exercise.name} - ${exercise.reps} reps`;
-
+                
                 const completeButton = document.createElement('button');
                 completeButton.textContent = 'Complete';
                 completeButton.onclick = () => markCompleted(index, false);
@@ -114,9 +156,16 @@
                 easyButton.textContent = 'Complete Easily';
                 easyButton.onclick = () => markCompleted(index, true);
 
-                li.appendChild(text);
-                li.appendChild(completeButton);
-                li.appendChild(easyButton);
+                header.appendChild(text);
+                header.appendChild(completeButton);
+                header.appendChild(easyButton);
+
+                const instructions = document.createElement('div');
+                instructions.className = 'instructions';
+                instructions.textContent = exercise.instructions;
+
+                li.appendChild(header);
+                li.appendChild(instructions);
 
                 if (exercise.completed) {
                     text.classList.add('completed');
@@ -131,14 +180,26 @@
         function markCompleted(index, easily) {
             progress.exercises[index].completed = true;
             progress.exercises[index].easily = easily;
-            progress.exercises[index].completionTime = new Date().toISOString();
-            if (easily) {
-                progress.exercises[index].reps += 2;
-            } else {
-                progress.exercises[index].reps += 1;
-            }
+            progress.exercises[index].completionTime = new Date().toLocaleString();
             localStorage.setItem(storageKey, JSON.stringify(progress));
             updateExerciseList();
+        }
+
+        function displayHistory() {
+            historyContainer.innerHTML = '';
+            history.forEach(day => {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'stat';
+                const date = document.createElement('h3');
+                date.textContent = day.date;
+                dayDiv.appendChild(date);
+                day.exercises.forEach(ex => {
+                    const exDiv = document.createElement('div');
+                    exDiv.textContent = `${ex.name} - ${ex.reps} reps - Completed: ${ex.completed ? 'Yes' : 'No'}${ex.completed ? ` - Easily: ${ex.easily ? 'Yes' : 'No'} - Time: ${new Date(ex.completionTime).toLocaleTimeString()}` : ''}`;
+                    dayDiv.appendChild(exDiv);
+                });
+                historyContainer.appendChild(dayDiv);
+            });
         }
 
         resetButton.onclick = () => {
@@ -148,6 +209,7 @@
         };
 
         updateExerciseList();
+        displayHistory();
     </script>
 </body>
 </html>
