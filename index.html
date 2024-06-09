@@ -146,11 +146,11 @@
 
         function updateExerciseList() {
             exerciseList.innerHTML = '';
-            const groupedExercises = progress.exercises.reduce((acc, exercise) => {
+            const groupedExercises = progress.exercises.reduce((acc, exercise, index) => {
                 if (!acc[exercise.timeOfDay]) {
                     acc[exercise.timeOfDay] = [];
                 }
-                acc[exercise.timeOfDay].push(exercise);
+                acc[exercise.timeOfDay].push({ ...exercise, index });
                 return acc;
             }, {});
 
@@ -160,7 +160,7 @@
                 header.textContent = `Recommended Time: ${timeOfDay}`;
                 exerciseList.appendChild(header);
 
-                groupedExercises[timeOfDay].forEach((exercise, index) => {
+                groupedExercises[timeOfDay].forEach((exercise) => {
                     const li = document.createElement('li');
                     const header = document.createElement('div');
                     header.className = 'exercise-header';
@@ -170,11 +170,11 @@
                     
                     const completeButton = document.createElement('button');
                     completeButton.textContent = 'Complete';
-                    completeButton.onclick = () => markCompleted(index, false);
+                    completeButton.onclick = () => markCompleted(exercise.index, false);
 
                     const easyButton = document.createElement('button');
                     easyButton.textContent = 'Complete Easily';
-                    easyButton.onclick = () => markCompleted(index, true);
+                    easyButton.onclick = () => markCompleted(exercise.index, true);
 
                     header.appendChild(text);
                     header.appendChild(completeButton);
