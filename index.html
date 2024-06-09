@@ -52,6 +52,12 @@
             margin: 5px 0 10px 0;
         }
 
+        .time-of-day {
+            font-size: 0.9em;
+            color: #007bff;
+            margin: 5px 0;
+        }
+
         button {
             padding: 10px 20px;
             background-color: #007bff;
@@ -92,13 +98,13 @@
     </div>
     <script>
         const initialExercises = [
-            { name: 'Chin Tucks', reps: 10, instructions: 'Sit or stand up straight. Tuck your chin in towards your chest without bending your neck. Hold for 5 seconds and release.' },
-            { name: 'Neck Rotations', reps: 10, instructions: 'Slowly turn your head to the left as far as comfortable, hold for 5 seconds, then return to the center. Repeat on the right side.' },
-            { name: 'Side Bends', reps: 10, instructions: 'Tilt your head towards your shoulder, hold for 5 seconds, then return to the center. Repeat on the other side.' },
-            { name: 'Forward Resistance', reps: 10, instructions: 'Place your hand on your forehead and push your head against it without moving your neck. Hold for 5 seconds.' },
-            { name: 'Side Resistance', reps: 10, instructions: 'Place your hand on the side of your head and push against it without moving your neck. Hold for 5 seconds. Repeat on the other side.' },
-            { name: 'Shoulder Shrugs', reps: 10, instructions: 'Lift your shoulders towards your ears and hold for 5 seconds, then relax.' },
-            { name: 'Shoulder Blade Squeezes', reps: 10, instructions: 'Squeeze your shoulder blades together and hold for 5 seconds, then release.' }
+            { name: 'Chin Tucks', reps: 10, instructions: 'Sit or stand up straight. Tuck your chin in towards your chest without bending your neck. Hold for 5 seconds and release.', timeOfDay: 'Morning' },
+            { name: 'Neck Rotations', reps: 10, instructions: 'Slowly turn your head to the left as far as comfortable, hold for 5 seconds, then return to the center. Repeat on the right side.', timeOfDay: 'Morning' },
+            { name: 'Side Bends', reps: 10, instructions: 'Tilt your head towards your shoulder, hold for 5 seconds, then return to the center. Repeat on the other side.', timeOfDay: 'Morning' },
+            { name: 'Forward Resistance', reps: 10, instructions: 'Place your hand on your forehead and push your head against it without moving your neck. Hold for 5 seconds.', timeOfDay: 'Midday' },
+            { name: 'Side Resistance', reps: 10, instructions: 'Place your hand on the side of your head and push against it without moving your neck. Hold for 5 seconds. Repeat on the other side.', timeOfDay: 'Midday' },
+            { name: 'Shoulder Shrugs', reps: 10, instructions: 'Lift your shoulders towards your ears and hold for 5 seconds, then relax.', timeOfDay: 'Afternoon' },
+            { name: 'Shoulder Blade Squeezes', reps: 10, instructions: 'Squeeze your shoulder blades together and hold for 5 seconds, then release.', timeOfDay: 'Afternoon' }
         ];
 
         const storageKey = 'whiplashRecoveryProgress';
@@ -130,7 +136,7 @@
                     ...ex,
                     completed: false,
                     easily: false,
-                    reps: ex.reps + (ex.easily ? 2 : 0)
+                    reps: ex.reps + (ex.easily ? 2 : 1)
                 })) : initialExercises
             };
             localStorage.setItem(storageKey, JSON.stringify(progress));
@@ -164,8 +170,13 @@
                 instructions.className = 'instructions';
                 instructions.textContent = exercise.instructions;
 
+                const timeOfDay = document.createElement('div');
+                timeOfDay.className = 'time-of-day';
+                timeOfDay.textContent = `Recommended Time: ${exercise.timeOfDay}`;
+
                 li.appendChild(header);
                 li.appendChild(instructions);
+                li.appendChild(timeOfDay);
 
                 if (exercise.completed) {
                     text.classList.add('completed');
