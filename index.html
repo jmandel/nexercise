@@ -30,6 +30,12 @@
             padding: 0;
         }
 
+        .time-header {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #007bff;
+        }
+
         li {
             display: flex;
             flex-direction: column;
@@ -50,12 +56,6 @@
             font-size: 0.9em;
             color: #555;
             margin: 5px 0 10px 0;
-        }
-
-        .time-of-day {
-            font-size: 0.9em;
-            color: #007bff;
-            margin: 5px 0;
         }
 
         button {
@@ -136,7 +136,7 @@
                     ...ex,
                     completed: false,
                     easily: false,
-                    reps: ex.reps + (ex.easily ? 2 : 1)
+                    reps: ex.reps + (ex.easily ? 2 : 0)
                 })) : initialExercises
             };
             localStorage.setItem(storageKey, JSON.stringify(progress));
@@ -146,46 +146,56 @@
 
         function updateExerciseList() {
             exerciseList.innerHTML = '';
-            progress.exercises.forEach((exercise, index) => {
-                const li = document.createElement('li');
-                const header = document.createElement('div');
-                header.className = 'exercise-header';
-                
-                const text = document.createElement('span');
-                text.textContent = `${exercise.name} - ${exercise.reps} reps`;
-                
-                const completeButton = document.createElement('button');
-                completeButton.textContent = 'Complete';
-                completeButton.onclick = () => markCompleted(index, false);
-
-                const easyButton = document.createElement('button');
-                easyButton.textContent = 'Complete Easily';
-                easyButton.onclick = () => markCompleted(index, true);
-
-                header.appendChild(text);
-                header.appendChild(completeButton);
-                header.appendChild(easyButton);
-
-                const instructions = document.createElement('div');
-                instructions.className = 'instructions';
-                instructions.textContent = exercise.instructions;
-
-                const timeOfDay = document.createElement('div');
-                timeOfDay.className = 'time-of-day';
-                timeOfDay.textContent = `Recommended Time: ${exercise.timeOfDay}`;
-
-                li.appendChild(header);
-                li.appendChild(instructions);
-                li.appendChild(timeOfDay);
-
-                if (exercise.completed) {
-                    text.classList.add('completed');
-                    completeButton.disabled = true;
-                    easyButton.disabled = true;
+            const groupedExercises = progress.exercises.reduce((acc, exercise) => {
+                if (!acc[exercise.timeOfDay]) {
+                    acc[exercise.timeOfDay] = [];
                 }
+                acc[exercise.timeOfDay].push(exercise);
+                return acc;
+            }, {});
 
-                exerciseList.appendChild(li);
-            });
+            for (const timeOfDay in groupedExercises) {
+                const header = document.createElement('h2');
+                header.className = 'time-header';
+                header.textContent = `Recommended Time: ${timeOfDay}`;
+                exerciseList.appendChild(header);
+
+                groupedExercises[timeOfDay].forEach((exercise, index) => {
+                    const li = document.createElement('li');
+                    const header = document.createElement('div');
+                    header.className = 'exercise-header';
+                    
+                    const text = document.createElement('span');
+                    text.textContent = `${exercise.name} - ${exercise.reps} reps`;
+                    
+                    const completeButton = document.createElement('button');
+                    completeButton.textContent = 'Complete';
+                    completeButton.onclick = () => markCompleted(index, false);
+
+                    const easyButton = document.createElement('button');
+                    easyButton.textContent = 'Complete Easily';
+                    easyButton.onclick = () => markCompleted(index, true);
+
+                    header.appendChild(text);
+                    header.appendChild(completeButton);
+                    header.appendChild(easyButton);
+
+                    const instructions = document.createElement('div');
+                    instructions.className = 'instructions';
+                    instructions.textContent = exercise.instructions;
+
+                    li.appendChild(header);
+                    li.appendChild(instructions);
+
+                    if (exercise.completed) {
+                        text.classList.add('completed');
+                        completeButton.disabled = true;
+                        easyButton.disabled = true;
+                    }
+
+                    exerciseList.appendChild(li);
+                });
+            }
         }
 
         function markCompleted(index, easily) {
