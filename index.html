@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whiplash Recovery Exercise Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        #app {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+        }
+
+        .completed {
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Whiplash Recovery Exercise Tracker</h1>
+        <div id="date-container"></div>
+        <ul id="exercise-list"></ul>
+        <button id="reset">Reset Progress</button>
+    </div>
+    <script>
+        const exercises = [
+            { name: 'Chin Tucks', reps: 10 },
+            { name: 'Neck Rotations', reps: 10 },
+            { name: 'Side Bends', reps: 10 },
+            { name: 'Forward Resistance', reps: 10 },
+            { name: 'Side Resistance', reps: 10 },
+            { name: 'Shoulder Shrugs', reps: 10 },
+            { name: 'Shoulder Blade Squeezes', reps: 10 }
+        ];
+
+        const storageKey = 'whiplashRecoveryProgress';
+        const dateContainer = document.getElementById('date-container');
+        const exerciseList = document.getElementById('exercise-list');
+        const resetButton = document.getElementById('reset');
+
+        const today = new Date().toISOString().split('T')[0];
+
+        let progress = JSON.parse(localStorage.getItem(storageKey)) || { date: '', exercises: [] };
+
+        if (progress.date !== today) {
+            progress = { date: today, exercises: exercises.map(ex => ({ ...ex, completed: false, easily: false })) };
+            localStorage.setItem(storageKey, JSON.stringify(progress));
+        }
+
+        dateContainer.textContent = `Date: ${progress.date}`;
+
+        function updateExerciseList() {
+            exerciseList.innerHTML = '';
+            progress.exercises.forEach((exercise, index) => {
+                const li = document.createElement('li');
+                const text = document.createElement('span');
+                text.textContent = `${exercise.name} - ${exercise.reps} reps`;
+
+                const completeButton = document.createElement('button');
+                completeButton.textContent = 'Complete';
+                completeButton.onclick = () => markCompleted(index, false);
+
+                const easyButton = document.createElement('button');
+                easyButton.textContent = 'Complete Easily';
+                easyButton.onclick = () => markCompleted(index, true);
+
+                li.appendChild(text);
+                li.appendChild(completeButton);
+                li.appendChild(easyButton);
+
+                if (exercise.completed) {
+                    text.classList.add('completed');
+                    completeButton.disabled = true;
+                    easyButton.disabled = true;
+                }
+
+                exerciseList.appendChild(li);
+            });
+        }
+
+        function markCompleted(index, easily) {
+            progress.exercises[index].completed = true;
+            progress.exercises[index].easily = easily;
+            if (easily) {
+                progress.exercises[index].reps += 2;
+            } else {
+                progress.exercises[index].reps += 1;
+            }
+            localStorage.setItem(storageKey, JSON.stringify(progress));
+            updateExerciseList();
+        }
+
+        resetButton.onclick = () => {
+            localStorage.removeItem(storageKey);
+            location.reload();
+        };
+
+        updateExerciseList();
+    </script>
+</body>
+</html>
